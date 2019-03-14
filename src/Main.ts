@@ -28,6 +28,7 @@
 //////////////////////////////////////////////////////////////////////////////////////
 
 class Main extends eui.UILayer {
+  bg: any
 
 
     protected createChildren(): void {
@@ -60,11 +61,11 @@ class Main extends eui.UILayer {
     private async runGame() {
         await this.loadResource()
         this.createGameScene();
-        const result = await RES.getResAsync("description_json")
-        this.startAnimation(result);
+        // const result = await RES.getResAsync("description_json")
+        // this.startAnimation(result);
         await platform.login();
         const userInfo = await platform.getUserInfo();
-        console.log(userInfo);
+        // console.log(userInfo);
 
     }
 
@@ -106,6 +107,7 @@ class Main extends eui.UILayer {
         let stageH = this.stage.stageHeight;
         sky.width = stageW;
         sky.height = stageH;
+        this.bg = sky
 
         let topMask = new egret.Shape();
         topMask.graphics.beginFill(0x000000, 0.5);
@@ -129,16 +131,26 @@ class Main extends eui.UILayer {
         // this.addChild(line);
 
 
-        let colorLabel = new egret.TextField();
+      var colorLabel:egret.TextField = new egret.TextField();
+        // let colorLabel = new egret.TextField();
         colorLabel.textColor = 0xffffff;
         colorLabel.width = stageW - 172;
         colorLabel.textAlign = "center";
-        colorLabel.text = "Hello Egret";
+        colorLabel.textFlow = new Array<egret.ITextElement>(
+          { text: "take a photo", style: { "href" : "event:text event triggered" } }
+        );
         colorLabel.size = 24;
         colorLabel.x = 240;
         colorLabel.y = 350;
-        // this.startAnimation(["Hello Egret"]);
-        this.addChild(colorLabel);
+      let tw = egret.Tween.get(colorLabel, { loop:true});
+      tw.to({ x: 240, y: 350 }, 400);
+      tw.to({ x: 240, y: 354 }, 800);
+      tw.to({ x: 237, y: 350 }, 800);
+      tw.to({ x: 240, y: 346 }, 800);
+      tw.to({ x: 240, y: 350 }, 400);
+      colorLabel.touchEnabled = true;
+      colorLabel.addEventListener(egret.TextEvent.LINK, this.takePhoto, this);
+      this.addChild(colorLabel);
 
         let textfield = new egret.TextField();
         this.addChild(textfield);
@@ -155,7 +167,7 @@ class Main extends eui.UILayer {
         button.label = "Click";
         button.horizontalCenter = 0;
         button.verticalCenter = 0;
-        this.addChild(button);
+        // this.addChild(button);
         button.addEventListener(egret.TouchEvent.TOUCH_TAP, this.onButtonClick, this);
     }
     /**
@@ -177,7 +189,6 @@ class Main extends eui.UILayer {
 
         let textflowArr = result.map(text => parser.parse(text));
         let textfield = this.textfield;
-        console.log(textflowArr, textfield)
         let count = -1;
         let change = () => {
             count++;
@@ -209,5 +220,34 @@ class Main extends eui.UILayer {
         panel.horizontalCenter = 0;
         panel.verticalCenter = 0;
         this.addChild(panel);
+    }
+
+    private takePhoto() {
+      let os = egret.Capabilities.os
+      let mobile = os === 'iOS' || os === 'Android'
+      if (mobile) {
+        let panel = new eui.Panel();
+        panel.title = "Oops, it only works on computer.";
+        panel.horizontalCenter = 0;
+        panel.verticalCenter = 0;
+        // this.addChild(panel);
+
+        let textfield = new egret.TextField();
+        this.addChild(textfield);
+        textfield.text = "Oops, it only works on computer.";
+        textfield.size = 24;
+        textfield.textColor = 0xffffff;
+        textfield.x = 172;
+        textfield.y = 60;
+        textfield.textAlign = egret.HorizontalAlign.CENTER;
+        let tw = egret.Tween.get(textfield);
+        tw.to({ "alpha": 1 }, 200);
+        tw.wait(1200);
+        tw.to({ "alpha": 0 }, 200);
+      } else {
+        let texture = this.bg.texture
+        texture.toDataURL("image/png", new egret.Rectangle(20, 20, 1500, 1500));
+        texture.saveToFile("image/png", "Max.png", new egret.Rectangle(20, 20, 1500, 1500));
+      }
     }
 }
